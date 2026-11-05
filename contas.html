@@ -281,7 +281,7 @@ $('#caca-auth-form').addEventListener('submit',async e=>{
 $('#caca-otp-form').addEventListener('submit',async e=>{
  e.preventDefault();
  const email=$('#auth-email').value.trim().toLowerCase();
- const token=$('#auth-otp').value.trim().replace(/\\s+/g,'');
+ const token=$('#auth-otp').value.trim().replace(/\s+/g,'');
  if(!email){info('Introduz o teu email primeiro.');$('#auth-email').focus();return;}
  if(!/^[0-9]{6,10}$/.test(token)){info('O código deve conter apenas algarismos (6 a 10).');return;}
  info('A confirmar o código…');
