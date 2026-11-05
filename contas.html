@@ -49,7 +49,7 @@
 </div>
 <div id="toast" aria-live="polite" role="status" class="toast"></div>
 <div id="modal-root"></div>
-<div id="auth-overlay" style="position:fixed;inset:0;background:#102b25;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px"><div style="background:#fff;border-radius:20px;max-width:490px;width:100%;padding:32px;box-shadow:0 30px 75px #07181299"><div style="font-size:12px;letter-spacing:.18em;color:#69816c">PREPARAÇÃO · CARTA DE CAÇADOR</div><h1 style="margin:12px 0">CAÇA SEGURA</h1><p>Inicia sessão com o teu email para guardar os resultados e continuar noutro dispositivo.</p><form id="caca-auth-form"><label for="auth-name" style="display:block;margin:12px 0 5px">Nome (primeiro acesso)</label><input id="auth-name" maxlength="100" placeholder="Nome" style="width:100%;padding:12px;border:1px solid #d9dfd9;border-radius:8px"><label for="auth-email" style="display:block;margin:12px 0 5px">Email</label><input id="auth-email" type="email" required placeholder="nome@exemplo.pt" style="width:100%;padding:12px;border:1px solid #d9dfd9;border-radius:8px"><button type="submit" style="width:100%;margin-top:18px;background:#102b25;color:white;border:0;padding:13px;border-radius:9px;cursor:pointer">Enviar ligação de acesso</button></form><p id="auth-message" role="status" style="font-size:13px;margin:15px 0 0;color:#54685d"></p><p style="font-size:12px;color:#777;margin-top:12px">A ligação será enviada para o teu email. A utilização implica guardar resultados e o endereço de email para acompanhamento do estudo.</p></div></div>
+<div id="auth-overlay" style="position:fixed;inset:0;background:#102b25;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px"><div style="background:#fff;border-radius:20px;max-width:490px;width:100%;padding:32px;box-shadow:0 30px 75px #07181299"><div style="font-size:12px;letter-spacing:.18em;color:#69816c">PREPARAÇÃO · CARTA DE CAÇADOR</div><h1 style="margin:12px 0">CAÇA SEGURA</h1><p>Inicia sessão com o teu email para guardar os resultados e continuar noutro dispositivo.</p><form id="caca-auth-form"><label for="auth-name" style="display:block;margin:12px 0 5px">Nome (primeiro acesso)</label><input id="auth-name" maxlength="100" placeholder="Nome" style="width:100%;padding:12px;border:1px solid #d9dfd9;border-radius:8px"><label for="auth-email" style="display:block;margin:12px 0 5px">Email</label><input id="auth-email" type="email" required placeholder="nome@exemplo.pt" style="width:100%;padding:12px;border:1px solid #d9dfd9;border-radius:8px"><button type="submit" style="width:100%;margin-top:18px;background:#102b25;color:white;border:0;padding:13px;border-radius:9px;cursor:pointer">Enviar código de acesso</button></form><form id="caca-otp-form" style="margin-top:18px;padding-top:16px;border-top:1px solid #e4e8e1"><label for="auth-otp" style="display:block;font-weight:650;margin-bottom:7px">Código recebido por email</label><input id="auth-otp" type="text" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6,10}" maxlength="10" required placeholder="Introduz o código de acesso" style="width:100%;padding:12px;border:1px solid #d9dfd9;border-radius:8px"><button type="submit" style="width:100%;margin-top:11px;background:#3e6655;color:white;border:0;padding:13px;border-radius:9px;cursor:pointer">Confirmar código e entrar</button></form><p id="auth-message" role="status" style="font-size:13px;margin:15px 0 0;color:#54685d"></p><p style="font-size:12px;color:#777;margin-top:12px">O código é enviado por email. Como a autenticação é partilhada, a mensagem pode apresentar a identificação SPOT13. Os resultados do CAÇA SEGURA ficam separados dos treinos.</p></div></div>
 <div id="cloud-tools" style="display:none;position:fixed;bottom:16px;right:16px;z-index:120;background:#102b25;color:white;padding:10px 13px;border-radius:14px;box-shadow:0 5px 25px #0004;font-size:12px;gap:10px;align-items:center"><span id="cloud-status">Conta ligada</span><button id="cloud-admin-button" hidden style="border:1px solid #a4b8ab;background:transparent;color:white;border-radius:8px;padding:6px">Administração</button><button id="cloud-signout" style="border:1px solid #a4b8ab;background:transparent;color:white;border-radius:8px;padding:6px">Sair</button></div>
 <div id="admin-overlay" hidden style="position:fixed;inset:0;background:#061914df;z-index:1400;overflow:auto;padding:30px 20px"><div style="max-width:1150px;margin:auto;background:white;padding:28px;border-radius:16px"><div style="display:flex;justify-content:space-between;gap:10px"><h2>Painel de administração — CAÇA SEGURA</h2><button id="admin-close" class="btn btn-ghost">Fechar</button></div><p>Dados dos alunos registados no CAÇA SEGURA.</p><div id="admin-data">A carregar…</div></div></div>
 <script>
@@ -273,10 +273,25 @@ async function sync(){
 window.addEventListener('caca-save',()=>{if(cloudUser&&!loading){clearTimeout(syncTimer);syncTimer=setTimeout(sync,800)}});
 $('#caca-auth-form').addEventListener('submit',async e=>{
  e.preventDefault();const email=$('#auth-email').value.trim().toLowerCase();const name=$('#auth-name').value.trim();
- info('A enviar email de acesso…');
+ info('A enviar código de acesso…');
  localStorage.setItem('caca-pending-name',name);
  const {error}=await supabase.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
- info(error?'Erro: '+error.message:'Verifica a caixa de entrada e abre a ligação de acesso no email.');
+ info(error?'Erro: '+error.message:'Código enviado. Consulta o email e introduz o código acima para entrar.');
+});
+$('#caca-otp-form').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const email=$('#auth-email').value.trim().toLowerCase();
+ const token=$('#auth-otp').value.trim().replace(/\\s+/g,'');
+ if(!email){info('Introduz o teu email primeiro.');$('#auth-email').focus();return;}
+ if(!/^[0-9]{6,10}$/.test(token)){info('O código deve conter apenas algarismos (6 a 10).');return;}
+ info('A confirmar o código…');
+ try{
+   const {data,error}=await supabase.auth.verifyOtp({email,token,type:'email'});
+   if(error){info('Código inválido ou expirado. Solicita um novo código e tenta novamente.');return;}
+   $('#auth-otp').value='';
+   info('Código confirmado. A carregar a tua conta…');
+   if(data?.user)await enter(data.user);
+ }catch(err){info('Não foi possível confirmar o código. Verifica a ligação e tenta novamente.');console.error('Falha no acesso',err);}
 });
 $('#cloud-signout').addEventListener('click',async()=>{await supabase.auth.signOut();cloudUser=null;admin=false;welcome();location.reload()});
 $('#cloud-admin-button').addEventListener('click',async()=>{
